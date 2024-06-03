@@ -3,14 +3,15 @@ from enum import Enum
 
 import matplotlib.pyplot as plt
 from scipy.signal import argrelextrema
-from reused_scripts.field_fox import *
-from reused_scripts.reused_plotting_functions import *
+from field_fox
 
 
 class Trigger(Enum):
     external = "EXT"
     rf_burst = "RFB"
     free_run = "FREE"
+
+
 
 def manual_sweep(field_fox, num_point_sweep, center_freq, freq_span, cw_power, acquisition_span=10e6,
                  local_num_points=100, sleep_time=0.1, trigger_mode="FREE", trigger_level=-25):
@@ -43,25 +44,52 @@ def manual_sweep(field_fox, num_point_sweep, center_freq, freq_span, cw_power, a
     return sweep_frequency, sweep
 
 
-def manual_sweep_2(field_fox, num_point_sweep, center_freq, freq_span, local_num_points=100, local_frequency_span=50e3,
-                   sleep_time=0.1, trigger_mode="FREE"):
-    sweep = np.zeros(num_point_sweep)
-    start_freq = center_freq - freq_span / 2
-    end_freq = center_freq + freq_span / 2
-    sweep_frequency = np.linspace(start_freq, end_freq, num_point_sweep)
-    field_fox.write("CALC:LIM:SOUN OFF")
-    mode_selection(fieldfox, "SA")
-    field_fox.write(f"TRIG:SOUR {trigger_mode}")
+# def manual_sweep_2(field_fox, num_point_sweep, center_freq, freq_span, local_num_points=100, local_frequency_span=50e3,
+#                    sleep_time=0.1, trigger_mode="FREE"):
+#     sweep = np.zeros(num_point_sweep)
+#     start_freq = center_freq - freq_span / 2
+#     end_freq = center_freq + freq_span / 2
+#     sweep_frequency = np.linspace(start_freq, end_freq, num_point_sweep)
+#     field_fox.write("CALC:LIM:SOUN OFF")
+#     mode_selection(fieldfox, "SA")
+#     field_fox.write(f"TRIG:SOUR {trigger_mode}")
 
-    for index, frequency in enumerate(sweep_frequency):
-        frequency_setup_center(fieldfox, local_num_points, frequency, local_frequency_span)
-        sa_source(field_fox, frequency, -7)
-        time.sleep(sleep_time)
-        peak_power = max(sa_retrieve_data(field_fox))
-        sweep[index] = peak_power
+#     for index, frequency in enumerate(sweep_frequency):
+#         frequency_setup_center(fieldfox, local_num_points, frequency, local_frequency_span)
+#         sa_source(field_fox, frequency, -7)
+#         time.sleep(sleep_time)
+#         peak_power = max(sa_retrieve_data(field_fox))
+#         sweep[index] = peak_power
 
 
-    return sweep_frequency, sweep
+#     return sweep_frequency, sweep
+
+def grid(axis):
+    # Show the major grid and style it slightly.
+    axis.grid(which='major', color='#DDDDDD', linewidth=0.8)
+    # Show the minor grid as well. Style it in very light gray as a thin,
+    # dotted line.
+    axis.grid(which='minor', color='#EEEEEE', linestyle=':', linewidth=0.5)
+    # Make the minor ticks and gridlines show.
+    axis.minorticks_on()
+    axis.set_axisbelow(True)
+
+def label_traces_plot(x_data_list, y_data_list, label_list, color_list, xlabel="", ylabel="", title="",
+                      row_len=15, col_len=7, fig=None, ax=None, log_scale=False, display="o", thick=2):
+    if ax is None:
+        fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(row_len, col_len))
+
+    for x_data, y_data, fig_label, line_color in zip(x_data_list, y_data_list, label_list, color_list):
+        ax.plot(x_data, y_data, f"{line_color}{display}", label=fig_label, linewidth=thick)
+    if log_scale:
+        ax.set_yscale('log')
+    ax.set_xlabel(xlabel, fontweight="bold", size=10)
+    ax.set_ylabel(ylabel, fontweight="bold", size=10)
+    ax.set_title(title, fontweight="bold", size=10)
+    ax.legend()
+    grid(ax)
+
+    return fig, ax
 
 
 def reflection_sweep(frequencies, sweep_trace):
